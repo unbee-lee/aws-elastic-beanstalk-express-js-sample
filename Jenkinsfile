@@ -37,9 +37,9 @@ pipeline {
                     id
                     test "$(id -u)" -ne 0
                     touch .workspace-write-check
-		     test -w .workspace-write-check
-		     rm .workspace-write-check
-		     echo "workspace write check: PASS"
+		    test -w .workspace-write-check
+		    rm .workspace-write-check
+		    echo "workspace write check: PASS"
                     mkdir -p reports
                     npm ci --no-audit
                 '''
