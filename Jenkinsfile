@@ -57,14 +57,13 @@ pipeline {
                 sh 'npm run test:ci'
             }
         }
-	post {
+    } // closes stages
+    post {
         always {
             archiveArtifacts artifacts: 'reports/**/*,image-metadata.txt',
                              allowEmptyArchive: true,
                              fingerprint: true
         }
     }
-        // The security, image-build and publication stages appear in Listing 6.
-    }
-}
+} // closes pipeline
 
