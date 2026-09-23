@@ -172,4 +172,7 @@ tags
 .history
 
 # End of https://www.toptal.com/developers/gitignore/api/node,macos,visualstudiocode,vim
-reports/
+# Generated dependencies and diagnostic reports
+/reports/
+/image-metadata.txt
+/.workspace-write-check

@@ -3,4 +3,5 @@ cat > .dockerignore <<'EOF'
 node_modules
 reports
 *.log
+/image-metadata.txt
 EOF

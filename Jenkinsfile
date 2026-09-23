@@ -4,6 +4,15 @@ pipeline {
         timestamps()
         disableConcurrentBuilds()
         skipDefaultCheckout(true)
+        // Build records and diagnostic artifacts use matching retention windows.
+        buildDiscarder(logRotator(
+            numToKeepStr: '30',
+            artifactNumToKeepStr: '30'
+        ))
+    }
+    triggers {
+        // SCM changes are checked at a hashed 15-minute interval.
+        pollSCM('H/15 * * * *')
     }
     environment {
         IMAGE_REPOSITORY = 'unbeelee/aws-elastic-beanstalk-express-js-sample'
@@ -11,6 +20,12 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
+                // Generated evidence is cleared from the reused workspace.
+                dir('reports') {
+                    deleteDir()
+                }
+                sh 'rm -f -- image-metadata.txt .workspace-write-check'
+
                 checkout scm
                 script {
                     env.SOURCE_REVISION = sh(
@@ -129,12 +144,28 @@ pipeline {
     }
 }
     } // closes stages
+
     post {
         always {
-            archiveArtifacts artifacts: 'reports/**/*,image-metadata.txt',
-                             allowEmptyArchive: true,
-                             fingerprint: true
-        }
-    }
-} // closes pipeline
+            // Diagnostic output is retained for successful and failed runs.
+            archiveArtifacts(
+                artifacts: 'reports/junit.xml,reports/npm-audit.json,image-metadata.txt',
+                allowEmptyArchive: true,
+                onlyIfSuccessful: false
+            )
+            script {
+                // Successful delivery requires a complete evidence set.
+                if (currentBuild.currentResult == 'SUCCESS') {
+                    def required = ['reports/junit.xml',
+                                    'reports/npm-audit.json',
+                                    'image-metadata.txt']
+                    def missing = required.findAll { !fileExists(it) }
+                    if (missing) {
+                        error("Missing required build evidence: ${missing.join(', ')}")
+                    }
+                 }
+            }
+       }
+   }
+}
 
