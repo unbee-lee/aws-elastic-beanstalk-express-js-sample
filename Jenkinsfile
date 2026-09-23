@@ -83,6 +83,17 @@ pipeline {
               } \
               console.log(r.metadata.vulnerabilities);"
 
+            node -e "const r=require('./reports/npm-audit.json'); \
+  for(const [name,v] of Object.entries(r.vulnerabilities || {})){ \
+    if(['high','critical'].includes(v.severity)){ \
+      const a=(v.via || []).find(x => typeof x === 'object') || {}; \
+      console.log('finding package=' + name + \
+        ' severity=' + v.severity + \
+        ' advisory=' + (a.title || 'transitive dependency') + \
+        ' url=' + (a.url || 'not supplied') + \
+        ' range=' + (v.range || 'not supplied')); \
+    } \
+  }"
             test "$audit_status" -eq 0
         '''
     }
