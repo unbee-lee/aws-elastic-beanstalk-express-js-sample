@@ -57,6 +57,21 @@ pipeline {
                 sh 'npm run test:ci'
             }
         }
+        stage('Build image') {
+            steps {
+                sh '''
+                    docker build --pull \
+                     --label "org.opencontainers.image.revision=$SOURCE_REVISION" \
+                      -t "$IMAGE_REPOSITORY:$IMAGE_TAG" .
+
+                    echo "built image: $IMAGE_REPOSITORY:$IMAGE_TAG"
+
+                    docker image inspect "$IMAGE_REPOSITORY:$IMAGE_TAG" \
+                     --format='id={{.Id}} revision={{index .Config.Labels "org.opencontainers.image.revision"}}' \
+                     | tee image-metadata.txt
+                '''
+            }
+         }
     } // closes stages
     post {
         always {
