@@ -6,7 +6,7 @@ pipeline {
         skipDefaultCheckout(true)
     }
     environment {
-        IMAGE_REPOSITORY = 'unbee-lee/aws-elastic-beanstalk-express-js-sample'
+        IMAGE_REPOSITORY = 'unbeelee/aws-elastic-beanstalk-express-js-sample'
     }
     stages {
         stage('Checkout') {
