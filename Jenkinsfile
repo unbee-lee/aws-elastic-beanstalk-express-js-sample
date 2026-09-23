@@ -72,6 +72,32 @@ pipeline {
                 '''
             }
          }
+        stage('Publish image') {
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'dockerhub-assessment2',
+            usernameVariable: 'REGISTRY_USER',
+            passwordVariable: 'REGISTRY_TOKEN'
+        )]) {
+            sh '''
+                set +x
+
+                trap 'docker logout docker.io >/dev/null 2>&1 || true' EXIT
+
+                printf '%s' "$REGISTRY_TOKEN" |
+                  docker login docker.io \
+                    --username "$REGISTRY_USER" \
+                    --password-stdin
+
+                docker push "$IMAGE_REPOSITORY:$IMAGE_TAG"
+
+                docker image inspect "$IMAGE_REPOSITORY:$IMAGE_TAG" \
+                  --format='digest={{index .RepoDigests 0}}' \
+                  | tee -a image-metadata.txt
+            '''
+        }
+    }
+}
     } // closes stages
     post {
         always {
