@@ -57,6 +57,36 @@ pipeline {
                 sh 'npm run test:ci'
             }
         }
+        stage('Dependency security gate') {
+    agent {
+        docker {
+            image 'node:16-bullseye-slim'
+            args '--user 1000:1000 -e HOME=/home/node'
+            reuseNode true
+        }
+    }
+
+    steps {
+        sh '''
+            mkdir -p reports
+            npm --version
+
+            audit_status=0
+
+            npm audit --audit-level=high --json \
+              > reports/npm-audit.json || audit_status=$?
+
+            node -e "const r=require('./reports/npm-audit.json'); \
+              if(r.error){ \
+                console.error(r.error.summary || r.error); \
+                process.exit(2); \
+              } \
+              console.log(r.metadata.vulnerabilities);"
+
+            test "$audit_status" -eq 0
+        '''
+    }
+}
         stage('Build image') {
             steps {
                 sh '''
